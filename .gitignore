@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/KS-Sweets.Infrastructure/bin/Debug/net8.0
+/KS-Sweets.Infrastructure/obj
+/KS-Sweets.Web/bin/Debug/net8.0
+/KS-Sweets.Web/obj
+/KS-Sweets.Domain/obj
+/KS-Sweets.Application/bin/Debug/net8.0
+/KS-Sweets.Application/obj
+/.vs
+/KS-Sweets.Domain/bin/Debug/net8.0
