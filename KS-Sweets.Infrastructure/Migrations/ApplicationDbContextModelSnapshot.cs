@@ -73,7 +73,7 @@ namespace KS_Sweets.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[Slug] IS NOT NULL");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.Feedback", b =>
@@ -116,7 +116,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Feedbacks");
+                    b.ToTable("Feedbacks", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.Identity.ApplicationUser", b =>
@@ -253,7 +253,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.OrderDetails", b =>
@@ -282,7 +282,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderDetails");
+                    b.ToTable("OrderDetails", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.OrderHeader", b =>
@@ -373,7 +373,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("OrderHeaders");
+                    b.ToTable("OrderHeaders", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.Product", b =>
@@ -425,7 +425,7 @@ namespace KS_Sweets.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[Slug] IS NOT NULL");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.ProductImage", b =>
@@ -447,7 +447,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages");
+                    b.ToTable("ProductImages", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.ShoppingCart", b =>
@@ -474,7 +474,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ShoppingCarts");
+                    b.ToTable("ShoppingCarts", (string)null);
                 });
 
             modelBuilder.Entity("KS_Sweets.Domain.Entities.WishList", b =>
@@ -513,7 +513,7 @@ namespace KS_Sweets.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("WishLists");
+                    b.ToTable("WishLists", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

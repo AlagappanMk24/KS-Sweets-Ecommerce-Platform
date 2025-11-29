@@ -1,6 +1,7 @@
 ﻿using KS_Sweets.Domain.Entities;
 using KS_Sweets.Domain.Entities.Common;
 using KS_Sweets.Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -13,17 +14,11 @@ namespace KS_Sweets.Infrastructure.Data.Context
     /// identity configuration, audit filters, unique constraints, relationships,
     /// and navigation mappings.
     /// </summary>
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    /// <remarks>
+    /// Constructor that initializes the database context with the given options.
+    /// </remarks>
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-        /// <summary>
-        /// Constructor that initializes the database context with the given options.
-        /// </summary>
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
-
-
         #region DbSets
 
         /// <summary>Category master table.</summary>
