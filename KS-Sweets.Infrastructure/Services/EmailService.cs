@@ -11,7 +11,6 @@ namespace KS_Sweets.Infrastructure.Services
     public class EmailService(IOptions<EmailSettings> options) : IEmailService
     {
         private readonly EmailSettings _settings = options.Value;
-
         public async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
         {
             var message = new MimeMessage

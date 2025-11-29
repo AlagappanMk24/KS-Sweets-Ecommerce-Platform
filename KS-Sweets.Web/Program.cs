@@ -43,6 +43,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Configure Identity Cookie Settings
     ConfigureApplicationCookie(services);
 
+    // Register the external authentication handler (Google)
+    ExternalAuthentication(services, configuration);
+
     // Configure Custom Email Settings (Configuration mapping)
     ConfigureEmailSettings(services, configuration);
 
@@ -121,6 +124,20 @@ void ConfigureApplicationCookie(IServiceCollection services)
         // Allows the cookie lifetime to be reset upon each request (good user experience)
         options.SlidingExpiration = true;
     });
+}
+
+void ExternalAuthentication(IServiceCollection services, IConfiguration configuration)
+{
+    // ====================== Google Authentication ======================
+    services.AddAuthentication()
+        .AddGoogle(googleOptions =>
+        {
+            googleOptions.ClientId = configuration.GetSection("GoogleKeys:ClientId").Value;
+            googleOptions.ClientSecret = configuration.GetSection("GoogleKeys:ClientSecret").Value;
+
+            // Google Cloud Console
+            googleOptions.CallbackPath = "/signin-google";
+        });
 }
 void ConfigureEmailSettings(IServiceCollection services, IConfiguration configuration)
 {
@@ -245,4 +262,3 @@ void ConfigureCustomLogging(WebApplication app)
     // Add the custom logging provider
     loggerFactory.AddProvider(new CustomFileLoggerProvider(logFilePath, httpContextAccessor));
 }
-

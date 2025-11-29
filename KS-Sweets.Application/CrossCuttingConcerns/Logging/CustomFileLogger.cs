@@ -7,7 +7,7 @@ namespace KS_Sweets.Application.CrossCuttingConcerns.Logging
     {
         private readonly string _logFilePath;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         public CustomFileLogger(string logFilePath, IHttpContextAccessor httpContextAccessor)
         {
             _logFilePath = logFilePath;

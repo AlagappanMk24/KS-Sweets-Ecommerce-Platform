@@ -1,30 +1,105 @@
 ﻿@page
 @model ExternalLoginModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "External Sign-in Successful";
+    bool isAdmin = (ViewData["IsAdmin"] as bool?) ?? false;
 }
 
-<h1>@ViewData["Title"]</h1>
-<h2 id="external-login-title">Associate your @Model.ProviderDisplayName account.</h2>
-<hr />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<p id="external-login-description" class="text-info">
-    You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
-</p>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-7">
 
-<div class="row">
-    <div class="col-md-4">
-        <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email."/>
-                <label asp-for="Input.Email" class="form-label"></label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-body text-center p-md-5 p-4">
+
+                    <i class="bi bi-person-check-fill text-success display-2 mb-4"></i>
+
+                    <h1 class="display-5 fw-bold text-dark mb-3">Welcome!</h1>
+
+                    <div class="alert alert-info bg-light border-0 p-4 rounded-3 mb-4">
+                        <p class="lead fw-medium mb-0">
+                            You have successfully signed in using @Model.ProviderDisplayName!
+                        </p>
+                    </div>
+
+                    <div class="fs-5 text-secondary">
+                        @if (isAdmin)
+                        {
+                            <span class="badge bg-danger fs-6 mb-2">
+                                <i class="bi bi-shield-fill-check me-1"></i> Administrator Access
+                            </span>
+                            <p class="mt-2">
+                                You have been granted administrative access. Use your powers wisely!
+                            </p>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary fs-6 mb-2">
+                                <i class="bi bi-person-fill me-1"></i> Customer Account
+                            </span>
+                            <p class="mt-2">
+                                Your account has been created and linked. You can now access all customer features.
+                            </p>
+                        }
+                    </div>
+
+                    @* <hr class="my-5">
+
+                    <h3 class="h5 text-muted mb-3">What's next?</h3> *@
+
+                  @*   <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+
+                        <a href="@Model.ReturnUrl" class="btn btn-lg btn-primary shadow-sm">
+                            <i class="bi bi-arrow-right-circle me-2"></i> Continue to the Application
+                        </a>
+
+                        <a asp-area="Identity" asp-page="/Account/Logout" class="btn btn-lg btn-outline-secondary shadow-sm">
+                            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                        </a>
+                    </div> *@
+                    <hr class="my-5" />
+
+                    <h3 class="h5 text-danger mb-3">Registration Required</h3>
+                    <p class="text-sm mb-4">
+                        Please provide an email to complete your registration with @Model.ProviderDisplayName.
+                    </p>
+
+                    <div class="row justify-content-center">
+                        <div class="col-sm-8 col-md-6">
+                            <form asp-page-handler="Confirmation"
+                                  asp-route-returnUrl="@Model.ReturnUrl"
+                                  method="post"
+                                  class="text-start">
+
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Name" class="form-control" placeholder="Enter your name" />
+                                    <label asp-for="Input.Name"></label>
+                                    <span asp-validation-for="Input.Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Email"
+                                           class="form-control"
+                                           autocomplete="email"
+                                           placeholder="Enter your email" />
+                                    <label asp-for="Input.Email"></label>
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="w-100 btn btn-lg btn-success">
+                                    Complete Registration
+                                </button>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </form>
+        </div>
     </div>
 </div>
 

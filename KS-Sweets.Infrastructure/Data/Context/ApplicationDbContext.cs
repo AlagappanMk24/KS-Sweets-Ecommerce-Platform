@@ -1,7 +1,6 @@
 ﻿using KS_Sweets.Domain.Entities;
 using KS_Sweets.Domain.Entities.Common;
 using KS_Sweets.Domain.Entities.Identity;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
