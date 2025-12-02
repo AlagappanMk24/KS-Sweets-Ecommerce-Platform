@@ -1,4 +1,4 @@
-﻿@page
+﻿@* @page
 @model LoginWith2faModel
 @{
     ViewData["Title"] = "Two-factor authentication";
@@ -36,4 +36,154 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+} *@
+
+
+
+
+@page
+@model LoginWith2faModel
+@{
+    ViewData["Title"] = "Two-Factor Authentication";
+}
+
+<style>
+    :root {
+        --color-primary-dark: #6B4226;
+        --color-secondary-light: #F8BBD0;
+        --color-accent-dark: #C79E89;
+        --color-bg-light: #FFF8F0;
+        --color-accent-text: #E57373;
+    }
+
+    body {
+        background-color: var(--color-bg-light);
+        overflow-x: hidden;
+    }
+
+    .auth-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        border: none;
+        overflow: hidden;
+    }
+
+    .auth-card-header {
+        background-color: var(--color-primary-dark) !important;
+        color: white;
+        padding: 25px 0;
+        border-bottom: 7px solid var(--color-secondary-light);
+    }
+
+    .auth-card-body {
+        padding: 40px !important;
+    }
+
+    .btn-auth-primary {
+        background-color: var(--color-primary-dark);
+        border-color: var(--color-primary-dark);
+        color: white;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 12px 0;
+        font-size: 1.15rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn-auth-primary:hover {
+            background-color: #5A351D;
+            border-color: #5A351D;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+    .form-control:focus {
+        border-color: var(--color-secondary-light) !important;
+        box-shadow: 0 0 0 0.25rem rgba(248, 187, 208, 0.6) !important;
+    }
+
+    .auth-links a {
+        color: var(--color-primary-dark);
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+        .auth-links a:hover {
+            color: var(--color-accent-text);
+            text-decoration: underline;
+        }
+</style>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6">
+        <div class="card auth-card">
+            <div class="card-header auth-card-header text-center">
+                <h3 class="py-1 mb-0 fw-bold">
+                    <i class="bi bi-shield-lock me-2"></i> Two-Step Verification
+                </h3>
+            </div>
+            <div class="card-body auth-card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-phone-vibrate display-1 text-primary"></i>
+                </div>
+                <h4 class="text-secondary text-center mb-4 fw-light">
+                    We've sent a verification code to your authenticator app.
+                </h4>
+                <p class="text-muted text-center mb-5">
+                    Please enter the 6-digit code below to complete your login.
+                </p>
+
+                <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                    <input asp-for="RememberMe" type="hidden" />
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger text-center mb-4" role="alert"></div>
+
+                    <div class="form-floating mb-4">
+                        <input asp-for="Input.TwoFactorCode"
+                               class="form-control text-center fs-3"
+                               autocomplete="off"
+                               placeholder="000000"
+                               style="letter-spacing: 8px; font-weight: bold;" />
+                        <label asp-for="Input.TwoFactorCode">Verification Code</label>
+                        <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" asp-for="Input.RememberMachine" id="rememberMachine" />
+                        <label class="form-check-label text-secondary" for="rememberMachine">
+                            @Html.DisplayNameFor(m => m.Input.RememberMachine)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-100 btn btn-auth-primary mb-3">
+                        <i class="bi bi-check2-circle me-2"></i> Verify & Log In
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted mb-2">
+                        Can't access your authenticator app?
+                    </p>
+                    <a asp-page="./LoginWithRecoveryCode"
+                       asp-route-returnUrl="@Model.ReturnUrl"
+                       class="auth-links fw-bold">
+                        <i class="bi bi-key me-1"></i> Use a recovery code instead
+                    </a>
+                </div>
+
+                <div class="text-center mt-4 pt-3 border-top">
+                    <a asp-page="./Login" class="small text-muted">
+                        <i class="bi bi-arrow-left me-1"></i> Back to login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Auto-focus the OTP input
+        document.querySelector('[asp-for="Input.TwoFactorCode"]').focus();
+    </script>
 }

@@ -66,31 +66,26 @@ namespace KS_Sweets.Web.Areas.Identity.Pages.Account
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-            if (ModelState.IsValid)
-            {
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            if (!ModelState.IsValid)
+                return Page();
 
-                if (result.Succeeded)
+            var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+
+            if (user != null)
+            {
+                var passwordValid = await _signInManager.UserManager.CheckPasswordAsync(user, Input.Password);
+
+                if (passwordValid)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
+                    // 🚀 Go to OTP screen (user NOT logged in yet)
+                    return RedirectToPage("./LoginWithEmailOtp", new
+                    {
+                        email = Input.Email,
+                        returnUrl = returnUrl
+                    });
                 }
             }
-
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
         }
 

@@ -126,6 +126,9 @@ namespace KS_Sweets.Web.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    //// ⭐ THIS LINE AUTOMATICALLY ENABLES 2FA FOR EVERY USER
+                    //await _userManager.SetTwoFactorEnabledAsync(user, true);
+
                     if (Input.Role == null)
                     {
                         await _userManager.AddToRoleAsync(user, AppRoles.Customer);

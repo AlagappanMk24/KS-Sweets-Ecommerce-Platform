@@ -1,215 +1,350 @@
 ﻿@page
 @model LoginModel
-
 @{
     ViewData["Title"] = "Log in";
 }
 
-<style>
-    :root {
-        --color-primary-dark: #6B4226;
-        --color-secondary-light: #F8BBD0;
-        --color-accent-dark: #C79E89; /* Soft Tan */
-        --color-bg-light: #FFF8F0;
-        --color-accent-text: #E57373;
-    }
+<div class="login-container">
+    <div class="login-wrapper">
 
-    body {
-        background-color: var(--color-bg-light);
-        /* الحل الرئيسي لإزالة شريط التمرير الأفقي */
-        overflow-x: hidden;
-    }
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <div class="left-content">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                        <h2 class="title">Welcome Back</h2>
+                        <p class="subtitle">Enter your email and password to access your account</p>
+                    </div>
 
-    .auth-card {
-        border-radius: 15px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        border: none;
-        overflow: hidden;
-    }
-
-    .auth-card-header {
-        background-color: var(--color-primary-dark) !important;
-        color: white;
-        padding: 25px 0;
-        border-bottom: 7px solid var(--color-secondary-light);
-    }
-
-    .auth-card-body {
-        /* تقليل الحشو قليلاً ليناسب الهواتف المحمولة بشكل أفضل */
-        padding: 40px !important;
-    }
-
-    /* ------------------------ الأزرار وتأثيراتها ------------------------ */
-
-    .btn-auth-primary {
-        background-color: var(--color-primary-dark);
-        border-color: var(--color-primary-dark);
-        color: white;
-        font-weight: 700;
-        border-radius: 10px;
-        padding: 12px 0;
-        font-size: 1.15rem;
-        transition: all 0.3s ease;
-    }
-
-        .btn-auth-primary:hover {
-            background-color: #5A351D;
-            border-color: #5A351D;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-    .auth-links a {
-        color: var(--color-primary-dark);
-        font-weight: 500;
-        text-decoration: none;
-        transition: color 0.2s;
-    }
-
-        .auth-links a:hover {
-            color: var(--color-accent-text);
-            text-decoration: underline;
-        }
-
-    .form-control:focus {
-        border-color: var(--color-secondary-light) !important;
-        box-shadow: 0 0 0 0.25rem rgba(248, 187, 208, 0.6) !important;
-    }
-
-    .form-check-input:checked {
-        background-color: var(--color-primary-dark);
-        border-color: var(--color-primary-dark);
-    }
-
-    /* تنسيق زر جوجل الجديد */
-    .btn-google {
-        background-color: #fff;
-        border: 2px solid var(--color-accent-dark);
-        color: var(--color-primary-dark);
-        font-weight: 700;
-        border-radius: 10px;
-        padding: 12px 0;
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .btn-google:hover {
-            background-color: #fcfcfc;
-            border-color: var(--color-primary-dark);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            transform: translateY(-1px);
-            color : darkslategrey;
-
-        }
-
-        .btn-google img {
-            width: 25px;
-            height: 25px;
-            margin-right: 12px;
-            vertical-align: middle;
-        }
-
-    /* OR line */
-    .divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: 30px 0;
-    }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .divider:not(:empty)::before {
-            margin-right: .75em;
-        }
-
-        .divider:not(:empty)::after {
-            margin-left: .75em;
-        }
-</style>
-
-
-<div class="row justify-content-center mt-5">
-    <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6">
-        <div class="card auth-card">
-            <div class="card-header auth-card-header text-center">
-                <h3 class="py-1 mb-0 fw-bold">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> Welcome Back
-                </h3>
-            </div>
-
-            <div class="card-body auth-card-body">
-                <div class="row">
-                    <div class="col-12">
-                        <h4 class="text-secondary text-center mb-5 fw-light">
-                            Log in to your <strong>Sweets</strong> account.
-                        </h4>
-
-                        <form id="account" method="post">
-                            <div asp-validation-summary="ModelOnly" class="text-danger mb-4 text-center" role="alert"></div>
-
-                            <div class="form-floating mb-4">
-                                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                                <label asp-for="Input.Email" class="form-label text-muted">Email Address</label>
-                                <span asp-validation-for="Input.Email" class="text-danger"></span>
-                            </div>
-
-                            <div class="form-floating mb-4">
-                                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                                <label asp-for="Input.Password" class="form-label text-muted">Password</label>
-                                <span asp-validation-for="Input.Password" class="text-danger"></span>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-5">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" asp-for="Input.RememberMe" id="rememberMeCheck" />
-                                    <label class="form-check-label text-secondary" for="rememberMeCheck">
-                                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                                    </label>
-                                </div>
-                                <div class="auth-links">
-                                    <a id="forgot-password" asp-page="./ForgotPassword" class="small">Forgot your password?</a>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <button id="login-submit" type="submit" class="w-100 btn btn-auth-primary">
-                                    <i class="bi bi-box-arrow-in-right me-1"></i> LOG IN
-                                </button>
-                            </div>
-                        </form>
-
-                        <div class="divider text-muted">OR</div>
-
-                        <form asp-page-handler="ExternalLogin" method="post">
-                            <input type="hidden" name="provider" value="Google" />
-                            <button type="submit" class="w-100 btn btn-google">
-                                <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google logo" />
-                                Sign in with Google
-                            </button>
-                        </form>
-
-                        <div class="auth-links text-center mt-4 pt-3 border-top">
-                            <p class="mb-0">
-                                Don't have an account?
-                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold">Register as a new user</a>
-                            </p>
-                        </div>
+                    <div class="logo-box ms-3">
+                        <img src="~/images/ks-sweets.jpg" class="login-logo" alt="KS Sweets Logo" />
                     </div>
                 </div>
+
+                <form method="post" class="mt-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Input.Email" class="form-control input-box" placeholder="Enter your email" />
+                        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3 position-relative">
+                        <label class="form-label">Password</label>
+                        <input asp-for="Input.Password" type="password" class="form-control input-box pe-5" id="loginPassword" placeholder="Enter your password" />
+                        <span class="toggle-eye" onclick="togglePassword('loginPassword', this)">
+                            <i class="bi bi-eye"></i>
+                        </span>
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="Input.RememberMe" />
+                            <label class="form-check-label small">Remember me</label>
+                        </div>
+                        <a asp-page="./ForgotPassword" class="small text-muted text-decoration-none">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-login w-100">Sign In</button>
+                </form>
+
+                <div class="divider my-4">Or login with</div>
+
+                <div class="d-flex gap-3">
+                    <!-- Google Login -->
+                    <form asp-page-handler="ExternalLogin" method="post" class="flex-fill">
+                        <input type="hidden" name="provider" value="Google" />
+
+                        <button type="submit" class="btn btn-social w-100">
+                            <img src="https://www.svgrepo.com/show/355037/google.svg" width="20" />
+                            Google
+                        </button>
+                    </form>
+
+                    <!-- Apple Login -->
+                    <form asp-page-handler="ExternalLogin" method="post" class="flex-fill">
+                        <input type="hidden" name="provider" value="Apple" />
+
+                        <button type="submit" class="btn btn-social w-100">
+                            <i class="bi bi-apple fs-5"></i> Apple
+                        </button>
+                    </form>
+                </div>
+
+                <p class="text-center mt-4 text-muted">
+                    Don't have account?
+                    <a asp-page="./Register" class="fw-bold" style="color: var(--peach)">Register</a>
+                </p>
+
             </div>
         </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="promo-container">
+
+                <div class="promo-badge">MORNING RISE</div>
+
+                <img class="promo-img"
+                     src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80" />
+
+                <div class="promo-content">
+                    <h3 class="promo-title">Try Our New Chocolate Almond Croissant!</h3>
+                    <p class="promo-text">
+                        Indulge in the perfect harmony of rich chocolate and toasted almonds,
+                        wrapped in our buttery, flaky croissant. A treat you won't forget!
+                    </p>
+
+                    <a href="/" class="promo-home">Back to Home →</a>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </div>
 
 
+<style>
+    :root {
+        --peach: #ff8c5a;
+        --peach-hover: #ff6b35;
+        --text-dark: #2d1b0f;
+        --cream: #fff7ed;
+    }
+
+    /* Background */
+    body {
+        background: var(--cream);
+        font-family: "Segoe UI", sans-serif;
+    }
+
+    /* Main container */
+    .login-container {
+        max-width: 1250px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    /* Wrapper with round corners */
+    .login-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #fff;
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(255, 150, 100, 0.18);
+    }
+
+    /* Left panel */
+    .left-panel {
+        padding: 60px 55px;
+    }
+
+    .title {
+        font-size: 34px;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .subtitle {
+        color: #777;
+        margin-top: 8px;
+    }
+
+    .logo-box {
+        width: 85px;
+        height: 85px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 5px 15px rgba(255, 140, 90, 0.25);
+        border: 3px solid #ffe5d6;
+    }
+
+    .login-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Inputs */
+    .input-box {
+        padding: 14px 18px;
+        border-radius: 14px;
+        border: 2px solid #f3e8e2;
+        transition: 0.3s;
+    }
+
+        .input-box:focus {
+            border-color: var(--peach);
+            box-shadow: 0 0 0 4px rgba(255, 140, 90, 0.25);
+        }
+
+    /* Login Button */
+    .btn-login {
+        padding: 14px;
+        background: var(--peach);
+        color: white;
+        border-radius: 14px;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 8px 20px rgba(255, 120, 70, 0.35);
+    }
+
+        .btn-login:hover {
+            background: var(--peach-hover);
+            transform: translateY(-2px);
+        }
+
+    /* Social Buttons */
+    .btn-social {
+        padding: 12px;
+        background: white;
+        border: 2px solid #eee0d7;
+        border-radius: 14px;
+        font-weight: 600;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        transition: 0.3s;
+    }
+
+        .btn-social:hover {
+            border-color: var(--peach);
+            background: #fff4ef;
+        }
+
+    /* Divider */
+    .divider {
+        text-align: center;
+        font-size: 1rem;
+        position: relative;
+    }
+
+    /* .divider::before {
+                content: "";
+                position: absolute;
+                height: 1px;
+                background: #eee;
+                left: 0;
+                right: 0;
+                top: 50%;
+            } */
+
+    .divider {
+        z-index: 2;
+        background: white;
+        width: fit-content;
+        padding: 0 10px;
+        margin: 0 auto;
+    }
+
+    /* RIGHT PANEL */
+    .right-panel {
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Right-side card */
+    .promo-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    /* MORNING RISE Badge */
+    .promo-badge {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        background: white;
+        color: var(--peach);
+        padding: 10px 24px;
+        font-weight: 700;
+        border-radius: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        z-index: 10;
+    }
+
+    /* Background bakery image */
+    .promo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Promo content card */
+    .promo-content {
+        position: absolute;
+        bottom: 40px;
+        left: 40px;
+        right: 40px;
+        padding: 26px;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 20px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .promo-title {
+        color: var(--text-dark);
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.3;
+    }
+
+    .promo-text {
+        margin-top: 10px;
+        color: #555;
+        line-height: 1.5;
+    }
+
+    .promo-home {
+        margin-top: 15px;
+        display: inline-block;
+        font-weight: bold;
+        color: var(--peach);
+        text-decoration: none;
+    }
+
+        .promo-home:hover {
+            text-decoration: underline;
+        }
+
+    .toggle-eye {
+        position: absolute;
+        right: 18px;
+        top: calc(50% + 14px);
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #888;
+        font-size: 1.25em;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        pointer-events: auto;
+    }
+
+        .toggle-eye:hover {
+            color: var(--peach);
+        }
+
+</style>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+             function togglePassword(id, icon) {
+            const input = document.getElementById(id);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.innerHTML = '<i class="bi bi-eye-slash"></i>';
+            } else {
+                input.type = "password";
+                icon.innerHTML = '<i class="bi bi-eye"></i>';
+            }
+        }
+    </script>
 }
