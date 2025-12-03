@@ -11,8 +11,4 @@
     <ProjectReference Include="..\KS-Sweets.Domain\KS-Sweets.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Contracts\Persistence\" />
-  </ItemGroup>
-
 </Project>

@@ -1,5 +1,6 @@
 ﻿using KS_Sweets.Domain.Constants;
 using KS_Sweets.Domain.Entities;
+using KS_Sweets.Domain.Entities.Identity;
 using KS_Sweets.Infrastructure.Data.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -7,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 namespace KS_Sweets.Infrastructure.Data.Initializers
 {
     public class DbInitializer(
-        UserManager<IdentityUser> userManager,
+        UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         ApplicationDbContext dbContext) : IDbInitializer
     {
-        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly ApplicationDbContext _dbContext = dbContext;
 
@@ -29,12 +30,6 @@ namespace KS_Sweets.Infrastructure.Data.Initializers
             {
                 Console.WriteLine($"❌ Migration error: {ex.Message}");
             }
-
-            // ✅ Ensure Roles exist
-            CreateRoleIfNotExists(AppRoles.Customer);
-            CreateRoleIfNotExists(AppRoles.Employee);
-            CreateRoleIfNotExists(AppRoles.Admin);
-
             // Create admin user
             CreateAdminUser();
 
@@ -44,8 +39,7 @@ namespace KS_Sweets.Infrastructure.Data.Initializers
 
         public void SeedData()
         {
-            // Run only if no products exist (prevents duplicate seeding)
-            if (_dbContext.Products.Any()) return;
+            if (_dbContext.Categories.Any()) return;
 
             // 1. Seed Categories
             var categories = new List<Category>
@@ -66,15 +60,17 @@ namespace KS_Sweets.Infrastructure.Data.Initializers
 
         private void CreateAdminUser()
         {
-            var adminEmail = "AmoreAdmin@gmail.com";
+            var adminName = "KSSweetsAdmin";
+            var adminEmail = "KSSweetsAdmin@gmail.com";
             var adminPassword = "Admin123*??";
 
             var adminUser = _userManager.FindByEmailAsync(adminEmail).GetAwaiter().GetResult();
 
             if (adminUser == null)
             {
-                var newAdmin = new IdentityUser
+                var newAdmin = new ApplicationUser
                 {
+                    Name = adminName,
                     UserName = adminEmail,
                     Email = adminEmail,
                     EmailConfirmed = true
@@ -90,16 +86,6 @@ namespace KS_Sweets.Infrastructure.Data.Initializers
             else if (!_userManager.GetRolesAsync(adminUser).GetAwaiter().GetResult().Contains(AppRoles.Admin))
             {
                 _userManager.AddToRoleAsync(adminUser, AppRoles.Admin).GetAwaiter().GetResult();
-            }
-        }
-
-        // ✅ Helper Method to safely create role if it doesn't exist
-        private void CreateRoleIfNotExists(string roleName)
-        {
-            if (!_roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult())
-            {
-                _roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
-                Console.WriteLine($"✅ Role '{roleName}' created successfully!");
             }
         }
     }

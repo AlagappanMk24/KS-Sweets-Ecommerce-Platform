@@ -2,6 +2,7 @@ using KS_Sweets.Application.CrossCuttingConcerns.Logging;
 using KS_Sweets.Domain.Constants;
 using KS_Sweets.Domain.Entities.Identity;
 using KS_Sweets.Infrastructure.Data.Context;
+using KS_Sweets.Infrastructure.Data.Initializers;
 using KS_Sweets.Infrastructure.DI;
 using KS_Sweets.Infrastructure.Shared;
 using Microsoft.AspNetCore.Identity;
@@ -22,10 +23,9 @@ var app = builder.Build();
 // =========================================================
 ConfigureMiddleware(app);
 
-// Seed database roles (must run after app.Build() but before app.Run())
-SeedDatabaseRoles(app);
+await SeedDatabaseAsync(app);
 
-app.Run();
+await app.RunAsync();
 
 // =========================================================
 // 3. SERVICE CONFIGURATION (ADD SERVICES)
@@ -96,14 +96,24 @@ void ConfigureDatabase(IServiceCollection services, IConfiguration configuration
 // ====================== Identity Configuration ======================
 void ConfigureIdentity(IServiceCollection services)
 {
+    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
     // Uses the custom ApplicationUser and IdentityRole
     services.AddDefaultIdentity<ApplicationUser>(options =>
     {
-        // Recommended for security in production, but often set to false during development
-        options.SignIn.RequireConfirmedAccount = false;
-
-        // Optional: Add strong password requirements here
-        // options.Password.RequireLowercase = true;
+        // Stricter requirements in production
+        if (environment == Environments.Production)
+        {
+            options.SignIn.RequireConfirmedAccount = true;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequiredLength = 8;
+        }
+        else
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+        }
     })
    // Ensure AddRoles is used to support RoleManager and authorization
    .AddRoles<IdentityRole>()
@@ -156,6 +166,8 @@ void ConfigureSession(IServiceCollection services)
         options.IdleTimeout = TimeSpan.FromMinutes(100); // 100 minutes of inactivity before session expires
         options.Cookie.HttpOnly = true; // Prevents client-side script access to the cookie (security)
         options.Cookie.IsEssential = true; // Allows session to work even if cookie consent is required
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Add for production
+        options.Cookie.SameSite = SameSiteMode.Strict; // Add for CSRF protection
     });
 }
 
@@ -207,42 +219,34 @@ void ConfigureMiddleware(WebApplication app)
         pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
     );
 
-    //app.MapControllerRoute(
-    //    name: "default",
-    //    pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}"
-    //);
-
     app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+        name: "default",
+        pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}"
+    );
 
     app.MapRazorPages();
 }
 
-// ====================== Role Seeding ======================
-
-/// <summary>
-/// Seeds the default Identity roles into the database on application startup.
-/// </summary>
-void SeedDatabaseRoles(WebApplication app)
+// Seed Database
+async Task SeedDatabaseAsync(WebApplication app)
 {
-    // Must use a scope to get services from the container after app is built
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    var serviceProvider = scope.ServiceProvider;
+
+    // Seed the database first
+    var dbInitializer = serviceProvider.GetRequiredService<IDbInitializer>();
+    dbInitializer.Initialize();
+
+    // Then seed roles
+    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roles = new[] { AppRoles.Admin, AppRoles.Employee, AppRoles.Customer };
+
+    foreach (var role in roles)
     {
-        var serviceProvider = scope.ServiceProvider;
-        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        // Seed the roles (using synchronous calls is acceptable here as it's a one-time startup task)
-        // Check for customer role as a sentinel value
-        if (!roleManager.RoleExistsAsync(AppRoles.Customer).GetAwaiter().GetResult())
+        if (!await roleManager.RoleExistsAsync(role))
         {
-            Console.WriteLine("Seeding initial Identity roles...");
-
-            roleManager.CreateAsync(new IdentityRole(AppRoles.Admin)).GetAwaiter().GetResult();
-            roleManager.CreateAsync(new IdentityRole(AppRoles.Employee)).GetAwaiter().GetResult();
-            roleManager.CreateAsync(new IdentityRole(AppRoles.Customer)).GetAwaiter().GetResult();
-
-            Console.WriteLine("Identity roles successfully seeded.");
+            await roleManager.CreateAsync(new IdentityRole(role));
+            Console.WriteLine($"Created role: {role}");
         }
     }
 }
