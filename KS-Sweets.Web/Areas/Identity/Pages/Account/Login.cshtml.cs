@@ -81,7 +81,7 @@ namespace KS_Sweets.Web.Areas.Identity.Pages.Account
                     return RedirectToPage("./LoginWithEmailOtp", new
                     {
                         email = Input.Email,
-                        returnUrl = returnUrl
+                        returnUrl
                     });
                 }
             }

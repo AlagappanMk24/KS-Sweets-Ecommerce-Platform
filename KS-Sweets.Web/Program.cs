@@ -1,5 +1,5 @@
 using KS_Sweets.Application.CrossCuttingConcerns.Logging;
-using KS_Sweets.Domain.Constants;
+using KS_Sweets.Application.DI;
 using KS_Sweets.Domain.Entities.Identity;
 using KS_Sweets.Infrastructure.Data.Context;
 using KS_Sweets.Infrastructure.Data.Initializers;
@@ -61,6 +61,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
             // Fixes potential serialization issues with circular references (e.g., entity relationships)
             options.JsonSerializerOptions.ReferenceHandler =
                 System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+
+            options.JsonSerializerOptions.PropertyNamingPolicy = null;
         });
 
     services.AddRazorPages();
@@ -156,8 +158,9 @@ void ConfigureEmailSettings(IServiceCollection services, IConfiguration configur
 }
 void RegisterApplicationServices(IServiceCollection services)
 {
-    // Calls the extension method to register services defined in the Infrastructure.DI layer
-    services.AddInfrastructureDependencies();
+    // Calls the extension method to register services defined in the Infrastructure.DI layer and Application layer
+    services.AddApplicationDependencies()
+          .AddInfrastructureDependencies();
 }
 void ConfigureSession(IServiceCollection services)
 {
@@ -228,29 +231,12 @@ void ConfigureMiddleware(WebApplication app)
 }
 
 // Seed Database
-async Task SeedDatabaseAsync(WebApplication app)
+static async Task SeedDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
-    var serviceProvider = scope.ServiceProvider;
-
-    // Seed the database first
-    var dbInitializer = serviceProvider.GetRequiredService<IDbInitializer>();
-    dbInitializer.Initialize();
-
-    // Then seed roles
-    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var roles = new[] { AppRoles.Admin, AppRoles.Employee, AppRoles.Customer };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-            Console.WriteLine($"Created role: {role}");
-        }
-    }
+    var initializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+    await initializer.InitializeAsync();
 }
-
 // ====================== Custom Logging Setup ======================
 void ConfigureCustomLogging(WebApplication app)
 {

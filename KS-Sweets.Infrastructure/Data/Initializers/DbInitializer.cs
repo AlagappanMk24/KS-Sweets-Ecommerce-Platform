@@ -4,42 +4,90 @@ using KS_Sweets.Domain.Entities.Identity;
 using KS_Sweets.Infrastructure.Data.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace KS_Sweets.Infrastructure.Data.Initializers
 {
     public class DbInitializer(
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
-        ApplicationDbContext dbContext) : IDbInitializer
+        ApplicationDbContext dbContext,
+        IConfiguration configuration) : IDbInitializer
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly ApplicationDbContext _dbContext = dbContext;
+        private readonly IConfiguration _configuration = configuration;
 
-        public void Initialize()
+        public async Task InitializeAsync()
         {
-            // ✅ Apply pending migrations automatically
-            try
-            {
-                if (_dbContext.Database.GetPendingMigrations().Any())
-                {
-                    _dbContext.Database.Migrate();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Migration error: {ex.Message}");
-            }
-            // Create admin user
-            CreateAdminUser();
+            await ApplyMigrationsAsync();
+
+            await SeedRolesAsync();
+
+            await CreateAdminUserAsync();
 
             // Seed categories + 6 products + images
-            SeedData();
+            await SeedDataAsync();
         }
-
-        public void SeedData()
+        private async Task ApplyMigrationsAsync()
         {
-            if (_dbContext.Categories.Any()) return;
+            if ((await _dbContext.Database.GetPendingMigrationsAsync()).Any())
+            {
+                await _dbContext.Database.MigrateAsync();
+            }
+        }
+        private async Task SeedRolesAsync()
+        {
+            var roles = new[] { AppRoles.Admin, AppRoles.Employee, AppRoles.Customer };
+
+            foreach (var role in roles)
+            {
+                if (!await _roleManager.RoleExistsAsync(role))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+                }
+            }
+        }
+        private async Task CreateAdminUserAsync()
+        {
+            var email = _configuration["AdminUser:Email"];
+            var password = _configuration["AdminUser:Password"];
+            var name = _configuration["AdminUser:Name"];
+
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+                return;
+
+            var adminUser = await _userManager.FindByEmailAsync(email);
+
+            if (adminUser == null)
+            {
+                adminUser = new ApplicationUser
+                {
+                    Name = name,
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await _userManager.CreateAsync(adminUser, password);
+
+                if (!createResult.Succeeded)
+                    throw new Exception(string.Join(",", createResult.Errors.Select(e => e.Description)));
+            }
+
+            // ✅ ALWAYS CHECK role assignment separately
+            if (!await _userManager.IsInRoleAsync(adminUser, AppRoles.Admin))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
+
+                if (!roleResult.Succeeded)
+                    throw new Exception(string.Join(",", roleResult.Errors.Select(e => e.Description)));
+            }
+        }
+        private async Task SeedDataAsync()
+        {
+            if (await _dbContext.Categories.AnyAsync()) return;
 
             // 1. Seed Categories
             var categories = new List<Category>
@@ -52,41 +100,8 @@ namespace KS_Sweets.Infrastructure.Data.Initializers
                 new() { Name = "Oriental Sweets", Slug = "oriental-sweets", Description = "Kunafa, Baklava & more", ImageUrl = "/images/categories/Pastries.jpg", IsActive = true }
             };
 
-            _dbContext.Categories.AddRange(categories);
-            _dbContext.SaveChanges();
-
-            Console.WriteLine("Successfully seeded 6 categories, 6 products and their images!");
-        }
-
-        private void CreateAdminUser()
-        {
-            var adminName = "KSSweetsAdmin";
-            var adminEmail = "KSSweetsAdmin@gmail.com";
-            var adminPassword = "Admin123*??";
-
-            var adminUser = _userManager.FindByEmailAsync(adminEmail).GetAwaiter().GetResult();
-
-            if (adminUser == null)
-            {
-                var newAdmin = new ApplicationUser
-                {
-                    Name = adminName,
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    EmailConfirmed = true
-                };
-
-                var result = _userManager.CreateAsync(newAdmin, adminPassword).GetAwaiter().GetResult();
-                if (result.Succeeded)
-                {
-                    _userManager.AddToRoleAsync(newAdmin, AppRoles.Admin).GetAwaiter().GetResult();
-                    Console.WriteLine("Admin user created successfully!");
-                }
-            }
-            else if (!_userManager.GetRolesAsync(adminUser).GetAwaiter().GetResult().Contains(AppRoles.Admin))
-            {
-                _userManager.AddToRoleAsync(adminUser, AppRoles.Admin).GetAwaiter().GetResult();
-            }
+            await _dbContext.Categories.AddRangeAsync(categories);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

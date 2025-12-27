@@ -1,0 +1,1186 @@
+﻿@{
+    ViewData["Title"] = "Manage Categories";
+}
+
+<!-- DataTables + Extensions CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" />
+
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title">
+            <i class="bi bi-tags-fill me-2"></i> Categories Management
+        </h2>
+
+        <div class="d-flex gap-2">
+            <div>
+                <button type="button" class="btn btn-add-new" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                    <i class="bi bi-plus-circle-fill"></i> Add New Category
+                </button>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-lightning-fill"></i> Bulk Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item text-danger" href="" id="bulkDelete">
+                            <i class="bi bi-trash"></i> Delete Selected
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="" id="bulkActivate">
+                            <i class="bi bi-check-circle"></i> Activate
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="" id="bulkDeactivate">
+                            <i class="bi bi-x-circle"></i> Deactivate
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-lg border-0">
+        <div class="card-body">
+            <table id="tblData" class="table table-hover table-bordered" style="width:100%">
+                <thead class="table-light">
+                    <tr>
+                        @*      <th></th> <!-- Checkbox --> *@
+                        <th class="text-center">
+                            <input type="checkbox" id="selectAll" />
+                        </th>
+                        <th class="text-center">Image</th>
+                        <th class="text-center" data-name="name">Name</th>
+                        <th class="text-center">Items</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Created</th>
+                        <th class="text-center">Updated</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <img id="modalImage" src="" class="img-fluid rounded shadow" style="max-height: 80vh;" alt="Category Image" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Add/Edit Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content add-category-modal">
+
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-semibold" id="categoryModalTitle">Add category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body pt-3">
+
+                <!-- FORM -->
+                <form id="categoryForm" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="CategoryId" name="Id" />
+                    <input type="hidden" id="ImageUrl" name="ImageUrl" />
+
+                    <!-- 🔴 FILE INPUT (OUTSIDE DROPZONE – IMPORTANT) -->
+                    <input type="file"
+                           id="ImageFile"
+                           name="ImageFile"
+                           accept="image/png,image/jpeg"
+                           class="d-none" />
+
+                    <!-- IMAGE DROP ZONE -->
+                    <div id="dropZone" class="upload-zone mb-2 text-center">
+                        <i class="bi bi-cloud-arrow-up fs-3"></i>
+                        <p class="mb-1">
+                            Drag & drop your image or
+                            <span class="browse-link text-primary fw-semibold">Select files</span>
+                        </p>
+
+                        <!-- Validation error -->
+                        <small class="text-danger d-block mt-2" id="ImageFileError"></small>
+
+                        <!-- Edit-only hint -->
+                        <small id="editImageHint"
+                               class="text-muted d-block mt-2"
+                               style="display:none;">
+                            Upload a new image to replace the existing one (optional)
+                        </small>
+                    </div>
+
+                    <div id="imagePreviewContainer" class="text-center mb-4" style="display:none">
+                        <img id="imagePreview" src="" class="img-thumbnail" style="max-height:150px;" />
+                        <br />
+                        <button type="button"
+                                id="removeImageBtn"
+                                class="btn btn-outline-danger btn-sm mt-2"
+                                style="display:none;">
+                            <i class="bi bi-trash"></i> Remove Image
+                        </button>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label" for="Name">Category Name</label>
+                            <input id="Name" name="Name" class="form-control soft-input"
+                                   placeholder="Enter category name" required />
+                            <small class="text-danger" id="NameError"></small>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label" for="Description">Description</label>
+                            <textarea id="Description" name="Description" class="form-control soft-input"
+                                      placeholder="Enter category description" rows="3"></textarea>
+                            <small class="text-danger" id="DescriptionError"></small>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="IsActive"
+                                       name="IsActive" value="true" checked />
+                                <label class="form-check-label" for="IsActive">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer border-0 justify-content-end gap-3">
+                <button class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary px-4" id="upsertCategoryBtn">
+                    Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content delete-modal-content">
+
+            <!-- Close Button -->
+            <button type="button" class="btn-close delete-close-btn" data-bs-dismiss="modal"></button>
+
+            <div class="delete-icon-container">
+                <i class="bi bi-trash-fill delete-icon"></i>
+            </div>
+
+            <div class="modal-body text-center">
+                <h4 class="delete-title">You are about to delete a category</h4>
+                <p class="delete-text">This will delete your category from catalog<br />Are you sure?</p>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-center gap-3 pb-4">
+                <button type="button" class="btn btn-light delete-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger delete-confirm-btn" id="confirmDeleteBtn">Delete</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-purple: #6a67d8;
+        --light-purple: #ececff;
+        --secondary-purple: #5654b0; /* Darker hover for primary */
+        --success-light: #e6f7ee;
+        --danger-light: #fbe6e6;
+    }
+
+    /* === Global Table & Card Styling === */
+    .card.shadow-lg {
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    #tblData {
+        border-collapse: separate !important; /* To respect border-radius */
+    }
+
+        #tblData th, #tblData td {
+            vertical-align: middle;
+        }
+
+        #tblData thead.table-light th {
+            background-color: #f8f9fa; /* Lighter header background */
+            font-weight: 700;
+            color: #343a40;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        #tblData tbody tr:hover {
+            background-color: var(--light-purple); /* Attractive hover effect */
+        }
+
+        /* 1. Center the Image column content specifically */
+        #tblData td:nth-child(2) {
+            text-align: center;
+        }
+
+    /* 2. Remove background color and selection effects from the row */
+    table.dataTable tbody tr.selected > * {
+        box-shadow: none !important;
+        color: inherit !important;
+    }
+
+    #tblData tbody tr.selected {
+        background-color: transparent !important;
+    }
+
+        /* Maintain your custom hover even when selected */
+        #tblData tbody tr.selected:hover {
+            background-color: var(--light-purple) !important;
+        }
+
+    /* Ensure the checkbox is the only visual indicator */
+    .row-select:checked {
+        accent-color: var(--primary-purple);
+    }
+
+    /* === Add New Button Styling === */
+    .btn-add-new {
+        background-color: var(--primary-purple);
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 8px 15px;
+        transition: background-color 0.2s;
+    }
+
+        .btn-add-new:hover {
+            background-color: var(--secondary-purple);
+            color: white; /* Keep text white on hover */
+        }
+
+    /* === Column Content Styling === */
+    .category-img {
+        height: 55px;
+        width: 55px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        cursor: zoom-in;
+        transition: transform 0.2s;
+    }
+
+        .category-img:hover {
+            transform: scale(1.05);
+        }
+
+    /* Status Toggle Button */
+    .btn-toggle-status {
+        border-radius: 16px;
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+    }
+
+        .btn-toggle-status .text-success {
+            color: #198754 !important;
+        }
+
+        .btn-toggle-status .text-danger {
+            color: #dc3545 !important;
+        }
+
+    .dropdown-toggle {
+        padding: 8px 15px !important;
+    }
+
+    /* Action Buttons Group */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+        .action-buttons .btn-sm {
+            padding: 5px 8px;
+            border-radius: 6px;
+        }
+
+    /* Datatable export buttons styling */
+    .dt-buttons .btn {
+        margin-right: 10px !important;
+        border-radius: 8px !important;
+        padding: 6px 12px !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+    }
+
+    /* Color matching for datatables export buttons */
+    .dt-buttons .btn-dark {
+        background-color: #495057;
+        border-color: #495057;
+    }
+
+    .dt-buttons .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #333;
+    }
+
+    .dt-buttons .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .dt-buttons .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .dt-buttons .btn-primary {
+        background-color: var(--primary-purple);
+        border-color: var(--primary-purple);
+    }
+
+    /* === Modal Styling (Retained and slightly enhanced) === */
+    .custom-modal {
+        border-radius: 18px !important;
+        padding-top: 50px;
+        padding-bottom: 20px;
+        position: relative;
+    }
+
+    /* Icon circle */
+    .modal-icon-section {
+        width: 75px;
+        height: 75px;
+        background: var(--light-purple);
+        border-radius: 50%;
+        margin: 0 auto;
+        margin-top: -85px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+        .modal-icon-section i {
+            font-size: 40px;
+            color: var(--primary-purple);
+            transition: color 0.3s ease;
+        }
+
+    .modal-save-btn {
+        background: var(--primary-purple);
+        color: #fff;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+
+        .modal-save-btn:hover {
+            background: var(--secondary-purple);
+        }
+
+    .modal-icon-section.edit-mode {
+        background: #fdf5e6;
+    }
+
+        .modal-icon-section.edit-mode i {
+            color: #ffc107;
+        }
+
+    .validation-error {
+        font-size: 13px;
+        display: block;
+        margin-top: 2px;
+    }
+
+    /* Modal card design */
+    .delete-modal-content {
+        border-radius: 20px;
+        padding-top: 50px;
+        border: none;
+        position: relative;
+    }
+
+    /* Delete icon */
+    .delete-icon-container {
+        position: absolute;
+        top: -35px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        width: 75px;
+        height: 75px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .delete-icon {
+        font-size: 38px;
+        color: #ff3b30;
+    }
+
+    /* Title */
+    .delete-title {
+        font-weight: 700;
+        margin-top: 20px;
+    }
+
+    /* Description text */
+    .delete-text {
+        color: #7d7d7d;
+        margin-top: 10px;
+        line-height: 1.5;
+        font-size: 15px;
+    }
+
+    /* Buttons */
+    .delete-cancel-btn {
+        padding: 8px 22px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .delete-confirm-btn {
+        padding: 8px 22px;
+        border-radius: 12px;
+        font-weight: 600;
+        background-color: #ff3b30 !important;
+        border: none;
+    }
+
+    /* Close X button inside delete modal */
+    .delete-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        border-radius: 50%;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 10;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    .drop-zone {
+        border: 2px dashed #6a67d8;
+        border-radius: 12px;
+        padding: 25px;
+        text-align: center;
+        cursor: pointer;
+        background: #f9f9ff;
+        transition: all 0.2s;
+    }
+
+        .drop-zone.dragover {
+            background: #ececff;
+            border-color: #5654b0;
+        }
+
+    .add-category-modal {
+        border-radius: 18px;
+        padding: 10px 10px 20px;
+    }
+
+    .upload-zone {
+        border: 2px dashed #cfd4dc;
+        border-radius: 14px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+    }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            background: #eef2ff;
+            border-color: #6366f1;
+        }
+
+        .upload-zone i {
+            font-size: 34px;
+            color: #6366f1;
+        }
+
+        .upload-zone p {
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+    .browse-link {
+        color: #6366f1;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .soft-input {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+        .soft-input:focus {
+            background: #fff;
+            border-color: #6366f1;
+            box-shadow: none;
+        }
+
+    .preview-img {
+        max-height: 120px;
+        border-radius: 10px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    .modal-footer .btn-primary {
+        background: #0f2a3d;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+</style>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <!-- Select Extension JS (Required for checkboxes) -->
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            /* =======================
+               CONSTANTS & GLOBALS
+            ======================= */
+            const $table = $('#tblData');
+            const $form = $('#categoryForm');
+            const $modal = $('#categoryModal');
+            const $imageInput = $('#ImageFile');
+
+            let deleteId = null;
+            let isEditMode = false;
+
+            /* =========================
+               DATATABLE INITIALIZATION
+            ==========================*/
+            const table = $table.DataTable({
+                serverSide: true,
+                processing: true,
+                responsive: true,
+
+                // ✅ DEFAULT: NEWLY CREATED FIRST
+                order: [[5, 'desc']],
+
+                ajax: {
+                    url: '/admin/categories/list',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: d => JSON.stringify(d),
+                    dataSrc: 'data'
+                },
+                dom: 'Bfrtip',
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child input[type="checkbox"]'
+                },
+                buttons: getExportButtons(),
+                columnDefs: getColumnDefs(),
+                columns : getColumns()
+            });
+
+            toggleExportButtons(false);
+
+            /* =======================
+               TABLE SELECTION HANDLING
+            ======================= */
+            $table.on('click', '.row-select', function (e) {
+                const row = table.row($(this).closest('tr'));
+                this.checked ? row.select() : row.deselect();
+                e.stopPropagation();
+            });
+
+            table.on('select deselect', syncSelection);
+
+            $('#selectAll').on('change', function () {
+                this.checked ? table.rows().select() : table.rows().deselect();
+            });
+
+            /* =======================
+               STATUS TOGGLE
+            ======================= */
+            $table.on('click', '.btn-toggle-status', function () {
+                 post(`/admin/categories/${$(this).data('id')}/toggle-status`)
+                     .done(() => reloadTable('Status updated'));
+            });
+
+            /* =======================
+               ADD / EDIT
+            ======================= */
+            $('.btn-add-new').on('click', openAddModal);
+
+            $table.on('click', '.btn-edit', function () {
+                $.get(`/admin/categories/${$(this).data('id')}`, res => {
+                    if (res.success) fillEditForm(res.data);
+                });
+            });
+
+            $('#upsertCategoryBtn').on('click', upsertCategory);
+            $modal.on('hidden.bs.modal', resetForm);
+
+            /* =======================
+               DELETE
+            ======================= */
+            $table.on('click', '.btn-delete-single', function () {
+                deleteId = $(this).data('id');
+                $('#deleteConfirmModal').modal('show');
+            });
+
+            $('#confirmDeleteBtn').on('click', () => {
+                $.post(`/admin/categories/${deleteId}/delete`)
+                  .done(() => {
+                     // 1. Hide the modal first
+                     $('#deleteConfirmModal').modal('hide');
+
+                     // 2. Then refresh the table and show notification
+                     reloadTable('Category deleted');
+                  })
+                  .fail(() => {
+                      alert('Something went wrong. Please try again.');
+                  });
+            });
+
+            $('#bulkDelete').on('click', function (e){
+                e.preventDefault();
+                bulkDelete();
+            });
+
+            $('#bulkActivate').on('click', function (e) {
+                e.preventDefault();
+                bulkStatus(true);
+            });
+
+            $('#bulkDeactivate').on('click', function (e) {
+                e.preventDefault();
+                bulkStatus(false);
+            });
+
+            /* =======================
+               IMAGE UPLOAD & PREVIEW
+            ======================= */
+
+            // Prevent bubbling from file input
+            $imageInput.on('click', function (e) {
+                e.stopPropagation();
+            });
+
+            // Open file dialog
+            $('#dropZone, .browse-link').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $imageInput[0].click(); // native click
+            });
+
+            $imageInput.on('change', function () {
+                if (!this.files || !this.files.length) return;
+                clearError('ImageFile');
+                previewImage(this.files[0]);
+            });
+
+            // Drag & Drop
+            $('#dropZone')
+                .on('dragover', function (e) {
+                    e.preventDefault();
+                    $(this).addClass('dragover');
+                })
+                .on('dragleave', function (e) {
+                    e.preventDefault();
+                    $(this).removeClass('dragover');
+                })
+                .on('drop', function (e) {
+                    e.preventDefault();
+                    $(this).removeClass('dragover');
+
+                    const files = e.originalEvent.dataTransfer.files;
+                    if (!files || !files.length) return;
+
+                    // Assign file
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(files[0]);
+                    $imageInput[0].files = dataTransfer.files;
+
+                    clearError('ImageFile');
+                    previewImage(files[0]);
+                });
+
+            $(document).on('click', '.clickable-img', function () {
+                $('#modalImage').attr('src', $(this).attr('src'));
+                $('#imageModal').modal('show');
+            });
+
+            $('#removeImageBtn').on('click', function () {
+                const categoryId = $('#CategoryId').val();
+                if (!categoryId) return;
+
+                $.ajax({
+                    url: `/admin/categories/${categoryId}/remove-image`,
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken':
+                            $('input[name="__RequestVerificationToken"]').val()
+                    }
+                }).done(res => {
+
+                    if (!res.success) {
+                        toastr.error(res.message);
+                        return;
+                    }
+
+                    // UI updates
+                    $('#imagePreview').attr('src', '');
+                    $('#imagePreviewContainer').fadeOut();
+                    $('#removeImageBtn').hide();
+
+                    toastr.success(res.message);
+                });
+            });
+
+            /* =========================
+               LIVE VALIDATION
+            ==========================*/
+            $('#Name').on('input', function () {
+                if ($(this).val().trim().length >= 3) clearError('Name');
+            });
+
+            $('#Description').on('input', function () {
+                if ($(this).val().trim().length >= 5) clearError('Description');
+            });
+
+            /* =======================
+               HELPERS
+            ======================= */
+            function getExportButtons() {
+                return [
+                    { extend: 'copy', text: '<i class="bi bi-clipboard"></i> Copy', className: 'btn-dark me-2' },
+                    {
+                        extend: 'csv',
+                        text: '<i class="bi bi-filetype-csv"></i> CSV',
+                        className: 'btn-warning me-2',
+                        filename: 'Categories_' + new Date().toISOString().slice(0,10),
+                        exportOptions: {
+                            columns: [1,2,3,4,5,6],
+                            modifier: { selected: true }
+                        }
+                    },
+                    {
+                        extend: 'excel',
+                        text: '<i class="bi bi-file-excel"></i> Excel',
+                        className: 'btn-success me-2',
+                        filename: 'Categories_' + new Date().toISOString().slice(0,10),
+                        exportOptions: {
+                            columns: [1,2,3,4,5,6],
+                            modifier: { selected: true }
+                        }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="bi bi-file-pdf"></i> PDF',
+                        className: 'btn-danger me-2',
+                        orientation: 'landscape',
+                        filename: 'Categories_' + new Date().toISOString().slice(0,10),
+                        title: 'Categories Report',
+                        exportOptions: {
+                            columns: [2,3,4,5,6],
+                            modifier: { selected: true }
+                        },
+                        customize: function (doc) {
+                            // === Company Logo (CHANGE THIS URL) ===
+                            doc.content.splice(0, 0, {
+                                image: 'https://yourdomain.com/images/logo.png', // ← YOUR LOGO HERE
+                                width: 120,
+                                alignment: 'center',
+                                margin: [0, 20, 0, 20]
+                            });
+
+                            doc.content.splice(1, 0, {
+                                text: 'Categories Report',
+                                fontSize: 20,
+                                bold: true,
+                                color: '#6a67d8',
+                                alignment: 'center',
+                                margin: [0, 10, 0, 20]
+                            });
+
+                            doc.content.splice(2, 0, {
+                                text: 'Generated on: ' + new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
+                                alignment: 'center',
+                                fontSize: 12,
+                                italics: true,
+                                margin: [0, 0, 0, 30]
+                            });
+
+                            doc.styles.tableHeader.fillColor = '#6a67d8';
+                            doc.styles.tableHeader.color = 'white';
+                            doc.styles.tableHeader.bold = true;
+                            doc.content[4].table.widths = ['12%', '18%', '28%', '10%', '10%', '11%', '11%'];
+
+                            // Bigger images in PDF (80px)
+                            const body = doc.content[4].table.body;
+                            body.forEach((row, i) => {
+                                if (i === 0) return;
+                                const imgUrl = row[0].text;
+                                if (imgUrl) {
+                                    row[0] = { image: imgUrl, width: 80, alignment: 'center', margin: [0, 5] };
+                                } else {
+                                    row[0] = { text: 'No Image', alignment: 'center', color: '#999' };
+                                }
+                            });
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="bi bi-printer"></i> Print',
+                        className: 'btn-primary me-2',
+                        autoPrint: true,
+                        customize: function (win) {
+                            $(win.document.body)
+                                .css('font-size', '12px')
+                                .find('table')
+                                .addClass('table table-bordered');
+                        },
+                        exportOptions: {
+                            columns: [2,3,4,5,6],
+                            modifier: { selected: true }
+                        }
+                    }
+                ]
+            }
+
+            function getColumnDefs() {
+                return [
+                    {
+                        targets: 0,
+                        orderable: false,
+                        className: 'text-center',
+                        render: function () {
+                            return `<input type="checkbox" class="row-select" />`;
+                        }
+                    },
+                    { width: "3%", targets: 0 }, // Checkbox: Smallest utility column
+                    { width: "7%", targets: 1, className: "text-center"}, // Image: Small utility column
+                    { width: "25%", targets: 2 }, // Name: Max space for the main data
+                    { width: "11%", targets: 3 }, // Items: Short numeric data
+                    { width: "15%", targets: 4 }, // Status: Button requires more width
+                    { width: "12%", targets: 5 }, // Created: Date
+                    { width: "12%", targets: 6 }, // Updated: Date
+                    { width: "15%", targets: 7 }, // Actions: Fixed width for buttons
+                    { orderable: false, targets: [0, 7] },
+                    { className: "text-center", targets: [0,1, 3, 4, 5, 6, 7] }, // Center alignment for most columns
+                ];
+            }
+
+            function getColumns() {
+                return [
+                    { data: null},
+                    { data: 'imageUrl', render: data => data ? `<img src="${data}" class="category-img clickable-img" />` : '<i class="bi bi-image text-muted"></i>'},
+                    { data: 'name', render: $.fn.dataTable.render.text()},
+                    { data: 'itemCount', render: data => `<span class="badge bg-primary">${data ?? 0}</span>` },
+                    { data: 'isActive', render: (data, type, row) => {
+                        const status = data ? 'Active' : 'Inactive';
+                        // Using a pill badge style for better visual status
+                        const cssClass = data ? 'bg-success-light text-success' : 'bg-danger-light text-danger';
+                        return `<span class="badge ${cssClass} rounded-pill p-2">${status}</span>
+                                <button class="btn btn-sm btn-link btn-toggle-status p-0 ms-1" data-id="${row.id}" title="Toggle Status"><i class="bi bi-arrow-left-right"></i></button>`;
+                    }},
+                    { data: 'createdAt', render: data => data ? new Date(data).toLocaleDateString() : '—' },
+                    { data: 'updatedAt', render: data => data ? new Date(data).toLocaleDateString() : '—' },
+                    { data: null, render: (data, type, row) => `
+
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm btn-edit" data-id="${row.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+                            <a href="/admin/categories/${row.slug}" class="btn btn-info btn-sm" title="View"><i class="bi bi-eye"></i></a>
+                            <button class="btn btn-danger btn-sm btn-delete-single" data-id="${row.id}" title="Delete"><i class="bi bi-trash"></i></button>
+                        </div>`
+                    }
+                ];
+            }
+
+            function upsertCategory() {
+                clearErrors();
+                if (!validateForm()) return;
+
+                const formData = new FormData($form[0]);
+                formData.set('IsActive', $('#IsActive').is(':checked'));
+
+                console.log(formData, "formData");
+
+                const id = $('#CategoryId').val();
+                const url = isEditMode
+                    ? `/admin/categories/${id}`
+                    : `/admin/categories`;
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                }).done(res => {
+                    if (!res.success) return showServerErrors(res);
+                    reloadTable(res.message || 'Saved successfully');
+                    $modal.modal('hide');
+                });
+            }
+
+            /* =======================
+               FORM VALIDATION
+            ======================= */
+
+            function validateForm() {
+                clearErrors();
+                let valid = true;
+
+                const name = $('#Name').val().trim();
+                const desc = $('#Description').val().trim();
+                const file = $imageInput[0].files[0];
+
+                if (name.length < 3) {
+                    showError('Name', 'Minimum 3 characters');
+                    valid = false;
+                }
+
+                if (desc.length < 5) {
+                    showError('Description', 'Description must be at least 5 characters');
+                    valid = false;
+                }
+
+                if (!isEditMode  && !file) {
+                    showError('ImageFile', 'Image is required');
+                    $('#dropZone').addClass('border border-danger');
+                    valid = false;
+                }
+
+                if (file && !validateImage(file)) {
+                    valid = false;
+                }
+
+                return valid;
+            }
+
+            function validateImage(file) {
+                const allowed = ['image/jpeg', 'image/png'];
+
+                if (!allowed.includes(file.type)) {
+                    showError('ImageFile', 'Only JPG or PNG images allowed');
+                    return false;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    showError('ImageFile', 'Image size must be less than 2MB');
+                    return false;
+                }
+
+                return true;
+            }
+
+            function previewImage(file) {
+                if (!validateImage(file)) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#imagePreview').attr('src', e.target.result);
+                    $('#imagePreviewContainer').fadeIn();
+
+                    if (isEditMode) {
+                        $('#removeImageBtn').show();
+                    } else {
+                        $('#removeImageBtn').hide();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function reloadTable(msg) {
+                toastr.success(msg);
+                table.ajax.reload(null, false);
+            }
+
+            function openAddModal() {
+                isEditMode = false;
+                resetForm();
+
+                $('#categoryModal .modal-title').text('Add Category');
+                $('#upsertCategoryBtn').text('Add Category');
+
+                $('#removeImageBtn').hide();
+                $('#editImageHint').hide();
+
+                $modal.modal('show');
+            }
+
+            function resetForm() {
+                $form[0].reset();
+                $('#CategoryId').val('');
+                $('#ExistingImageUrl').val('');
+                $('#imagePreview').attr('src', '');
+                $('#imagePreviewContainer').hide();
+                $('#removeImageBtn').hide();
+                $('#editImageHint').hide();
+                clearErrors();
+            }
+
+            function showError(id, msg) {
+                $(`#${id}`).addClass('is-invalid');
+                $(`#${id}Error`).text(msg);
+                if (id === 'ImageFile') {
+                    $('#dropZone').addClass('border-danger');
+                }
+            }
+
+            function clearError(id) {
+                $(`#${id}`).removeClass('is-invalid');
+                $(`#${id}Error`).text('');
+                if (id === 'ImageFile') {
+                    $('#dropZone').removeClass('border-danger');
+                }
+            }
+
+            function clearErrors() {
+                $('.is-invalid').removeClass('is-invalid');
+                $('[id$="Error"]').text('');
+            }
+
+            function showServerErrors(res) {
+                if (!res.errors) return toastr.error(res.message);
+                $.each(res.errors, (k, v) => showError(k, v[0]));
+            }
+
+            function toggleExportButtons(enable) {
+                table.buttons(['csv', 'excel', 'pdf', 'print']).enable(enable);
+            }
+
+            function syncSelection() {
+                const selected = table.rows({ selected: true }).count();
+                toggleExportButtons(selected > 0);
+                $('#selectAll').prop('checked', selected === table.rows().count());
+                table.rows().every(function () {
+                    $(this.node()).find('.row-select').prop('checked', this.selected());
+                });
+            }
+
+            function fillEditForm(data) {
+                isEditMode = true;
+                resetForm();
+
+                $('#CategoryId').val(data.Id);
+                $('#Name').val(data.Name);
+                $('#Description').val(data.Description);
+                $('#IsActive').prop('checked', data.IsActive);
+
+                // ✅ SET EXISTING IMAGE URL
+                $('#ImageUrl').val(data.ImageUrl);
+
+                // EDIT MODE UI
+                $('#categoryModal .modal-title').text('Edit Category');
+                $('#upsertCategoryBtn').text('Update Category');
+
+                // Existing image preview (EDIT ONLY)
+                if (data.ImageUrl) {
+                    $('#imagePreview')
+                        .attr('src', data.ImageUrl)
+                        .show();
+                    $('#imagePreviewContainer').show();
+                    $('#editImageHint').show();
+                    $('#removeImageBtn').show();
+                }
+                $modal.modal('show');
+            }
+
+            function bulkDelete() {
+                const ids = getSelectedIds();
+
+                if (!ids.length) {
+                    toastr.warning('Please select at least one category');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/admin/categories/bulk-delete',
+                    type: 'POST',
+                    data: { ids }
+                }).done(res => {
+                    if (res.success) reloadTable(res.message);
+                });
+            }
+
+            function bulkStatus(isActive) {
+                const ids = getSelectedIds();
+
+                if (!ids.length) {
+                    toastr.warning('Please select at least one category');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/admin/categories/bulk-status',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        ids: ids,
+                        isActive: isActive
+                    })
+                })
+                .done(res => {
+                    if (!res.success) {
+                        toastr.error(res.message);
+                        return;
+                    }
+
+                    toastr.success(res.message);
+                    table.ajax.reload(null, false);
+                })
+                .fail(() => {
+                    toastr.error('Bulk operation failed');
+                });
+            }
+
+            function getSelectedIds() {
+                return table.rows({ selected: true }).data().toArray().map(x => x.id);
+            }
+        });
+    </script>
+}
